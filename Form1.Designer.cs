@@ -34,17 +34,23 @@
             btnCircle = new Button();
             cmbColor = new ComboBox();
             trbLineWidth = new TrackBar();
+            trbZoom = new TrackBar();
             btnOpenFile = new Button();
             btnSaveFile = new Button();
             groupBox1 = new GroupBox();
             groupBox2 = new GroupBox();
             groupBox3 = new GroupBox();
             picCanvas = new PictureBox();
+            panelCanvas = new Panel();
+            groupBox4 = new GroupBox();
             ((System.ComponentModel.ISupportInitialize)trbLineWidth).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)trbZoom).BeginInit();
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
             groupBox3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)picCanvas).BeginInit();
+            panelCanvas.SuspendLayout();
+            groupBox4.SuspendLayout();
             SuspendLayout();
             // 
             // lblAppName
@@ -113,6 +119,17 @@
             trbLineWidth.Size = new Size(128, 45);
             trbLineWidth.TabIndex = 5;
             // 
+            // trbZoom
+            // 
+            trbZoom.Location = new Point(19, 12);
+            trbZoom.Maximum = 400;
+            trbZoom.Minimum = 10;
+            trbZoom.Name = "trbZoom";
+            trbZoom.Size = new Size(129, 45);
+            trbZoom.TabIndex = 13;
+            trbZoom.TickFrequency = 10;
+            trbZoom.Value = 100;
+            // 
             // btnOpenFile
             // 
             btnOpenFile.BackColor = Color.FromArgb(255, 255, 192);
@@ -142,9 +159,9 @@
             groupBox1.Controls.Add(btnLine);
             groupBox1.Controls.Add(btnRectangle);
             groupBox1.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
-            groupBox1.Location = new Point(25, 86);
+            groupBox1.Location = new Point(13, 86);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(289, 108);
+            groupBox1.Size = new Size(301, 108);
             groupBox1.TabIndex = 8;
             groupBox1.TabStop = false;
             groupBox1.Text = "도형 선택";
@@ -174,19 +191,39 @@
             // picCanvas
             // 
             picCanvas.BorderStyle = BorderStyle.FixedSingle;
-            picCanvas.Location = new Point(27, 210);
+            picCanvas.Location = new Point(3, 3);
             picCanvas.Name = "picCanvas";
-            picCanvas.Size = new Size(744, 356);
+            picCanvas.Size = new Size(752, 338);
             picCanvas.TabIndex = 11;
             picCanvas.TabStop = false;
+            // 
+            // panelCanvas
+            // 
+            panelCanvas.AutoScroll = true;
+            panelCanvas.Controls.Add(picCanvas);
+            panelCanvas.Location = new Point(13, 200);
+            panelCanvas.Name = "panelCanvas";
+            panelCanvas.Size = new Size(758, 344);
+            panelCanvas.TabIndex = 12;
+            // 
+            // groupBox4
+            // 
+            groupBox4.Controls.Add(trbZoom);
+            groupBox4.Location = new Point(598, 550);
+            groupBox4.Name = "groupBox4";
+            groupBox4.Size = new Size(170, 66);
+            groupBox4.TabIndex = 14;
+            groupBox4.TabStop = false;
+            groupBox4.Text = "zoom in/zoom out";
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Control;
-            ClientSize = new Size(800, 578);
-            Controls.Add(picCanvas);
+            ClientSize = new Size(795, 628);
+            Controls.Add(groupBox4);
+            Controls.Add(panelCanvas);
             Controls.Add(groupBox3);
             Controls.Add(groupBox2);
             Controls.Add(groupBox1);
@@ -196,11 +233,15 @@
             Name = "Form1";
             Text = "Simple Paint v1.0";
             ((System.ComponentModel.ISupportInitialize)trbLineWidth).EndInit();
+            ((System.ComponentModel.ISupportInitialize)trbZoom).EndInit();
             groupBox1.ResumeLayout(false);
             groupBox2.ResumeLayout(false);
             groupBox3.ResumeLayout(false);
             groupBox3.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)picCanvas).EndInit();
+            panelCanvas.ResumeLayout(false);
+            groupBox4.ResumeLayout(false);
+            groupBox4.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -213,11 +254,14 @@
         private Button btnCircle;
         private ComboBox cmbColor;
         private TrackBar trbLineWidth;
+        private TrackBar trbZoom;
         private Button btnOpenFile;
         private Button btnSaveFile;
         private GroupBox groupBox1;
         private GroupBox groupBox2;
         private GroupBox groupBox3;
         private PictureBox picCanvas;
+        private Panel panelCanvas;
+        private GroupBox groupBox4;
     }
 }

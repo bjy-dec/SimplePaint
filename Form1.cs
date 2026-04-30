@@ -30,7 +30,12 @@ namespace SimplePaint
             canvasGraphics = Graphics.FromImage(canvasBitmap);
             canvasGraphics.Clear(Color.White);   // 캔버스를 흰색으로 초기화
 
-            picCanvas.Image = canvasBitmap;   // 그린 그림을 화면(PictureBox)에 표시
+            // PictureBox는 커스텀 Paint에서 이미지를 그린다.
+            picCanvas.Image = null;
+
+            // 초기 줌값을 트랙바 값에 맞춘다
+            zoomFactor = trbZoom != null ? trbZoom.Value / 100f : 1.0f;
+            picCanvas.Size = new Size((int)(canvasBitmap.Width * zoomFactor), (int)(canvasBitmap.Height * zoomFactor));
 
             // 마우스이벤트연결
             picCanvas.MouseDown += PicCanvas_MouseDown;
@@ -54,21 +59,28 @@ namespace SimplePaint
             trbLineWidth.Maximum = 10;   // 최대값
             trbLineWidth.Value = 5;
             trbLineWidth.ValueChanged += trbLineWidth_ValueChanged;
-
             btnSaveFile.Click += btnSaveFile_Click;
+            btnOpenFile.Click += btnOpenFile_Click;
+
+            // 줌 컨트롤 이벤트
+            if (trbZoom != null)
+            {
+                trbZoom.ValueChanged += trbZoom_ValueChanged;
+            }
 
         }
 
         private void PicCanvas_MouseDown(object sender, MouseEventArgs e)
         {
             isDrawing = true;             // 드래그 시작
-            startPoint = e.Location;      // 시작점 저장
+            // 화면 좌표 -> 이미지 좌표로 변환
+            startPoint = AdjustPoint(e.Location);      // 시작점 저장
         }
 
         private void PicCanvas_MouseMove(object sender, MouseEventArgs e)
         {
             if (!isDrawing) return;       // 그림 그리기와 상관없는 마우스 움직임은 무시
-            endPoint = e.Location;        // 현재 위치 갱신
+            endPoint = AdjustPoint(e.Location);        // 현재 위치 갱신 (이미지 좌표)
                                           // picCanvas를 다시 그려라(Paint 이벤트를 발생시킨다)
             picCanvas.Invalidate();       // 화면 다시 그리기(미리보기)        
         }
@@ -78,7 +90,7 @@ namespace SimplePaint
             if (!isDrawing) return;     // 그림 그리기와 상관없는 마우스 움직임은 무시
             
             isDrawing = false;          // 드래그 종료
-            endPoint = e.Location;
+            endPoint = AdjustPoint(e.Location);
             // 실제비트맵에도형그리기(확정)
             using (Pen pen = new Pen(currentColor, currentLineWidth))
             {
@@ -89,12 +101,23 @@ namespace SimplePaint
 
         private void PicCanvas_Paint(object sender, PaintEventArgs e)
         {
+            // 이미지 전체를 현재 컨트롤 크기에 맞춰서 그린다 (줌 적용)
+            if (canvasBitmap != null)
+            {
+                e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                e.Graphics.DrawImage(canvasBitmap, 0, 0, picCanvas.Width, picCanvas.Height);
+            }
+
             if (!isDrawing) return;
-            // 점선펜(미리보기용)
-            using (Pen previewPen = new Pen(currentColor, currentLineWidth))
+
+            // 미리보기 그리기: 이미지 좌표를 화면(컨트롤) 좌표로 변환
+            Point sp = new Point((int)(startPoint.X * zoomFactor), (int)(startPoint.Y * zoomFactor));
+            Point ep = new Point((int)(endPoint.X * zoomFactor), (int)(endPoint.Y * zoomFactor));
+
+            using (Pen previewPen = new Pen(currentColor, Math.Max(1f, currentLineWidth * zoomFactor)))
             {
                 previewPen.DashStyle = DashStyle.Dash;
-                DrawShape(e.Graphics, previewPen, startPoint, endPoint);
+                DrawShape(e.Graphics, previewPen, sp, ep);
             }
         }
 
@@ -193,6 +216,72 @@ namespace SimplePaint
                     canvasBitmap.Save(sfd.FileName, format);
                 }
             }
+        }
+
+        private void btnOpenFile_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+                ofd.Filter = "Image Files|*.png;*.jpg;*.bmp";
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    Bitmap loadedImage = new Bitmap(ofd.FileName);
+
+                    // 기존 비트맵 정리
+                    canvasGraphics.Dispose();
+                    canvasBitmap.Dispose();
+
+                    canvasBitmap = new Bitmap(loadedImage);
+                    canvasGraphics = Graphics.FromImage(canvasBitmap);
+
+                    // PictureBox의 이미지는 Paint에서 직접 그리므로 null로 둔다
+                    picCanvas.Image = null;
+
+                    // 캔버스 크기를 이미지 크기와 현재 줌에 맞춘다
+                    ResizeCanvasToImage();
+                }
+            }
+        }
+
+        private void ResizeCanvasToImage()
+        {
+            if (canvasBitmap == null) return;
+            picCanvas.Size = new Size((int)(canvasBitmap.Width * zoomFactor), (int)(canvasBitmap.Height * zoomFactor));
+        }
+
+        private float zoomFactor = 1.0f;
+
+        private Point AdjustPoint(Point p)
+        {
+            return new Point(
+                (int)(p.X / zoomFactor),
+                (int)(p.Y / zoomFactor)
+            );
+        }
+
+        private void btnZoomIn_Click(object sender, EventArgs e)
+        {
+            zoomFactor *= 1.2f;
+            if (canvasBitmap != null)
+                picCanvas.Size = new Size((int)(canvasBitmap.Width * zoomFactor), (int)(canvasBitmap.Height * zoomFactor));
+            picCanvas.Invalidate();
+        }
+
+        private void btnZoomOut_Click(object sender, EventArgs e)
+        {
+            zoomFactor /= 1.2f;
+            if (canvasBitmap != null)
+                picCanvas.Size = new Size((int)(canvasBitmap.Width * zoomFactor), (int)(canvasBitmap.Height * zoomFactor));
+            picCanvas.Invalidate();
+        }
+
+        private void trbZoom_ValueChanged(object? sender, EventArgs e)
+        {
+            if (trbZoom == null) return;
+            zoomFactor = trbZoom.Value / 100f;
+            if (canvasBitmap != null)
+                picCanvas.Size = new Size((int)(canvasBitmap.Width * zoomFactor), (int)(canvasBitmap.Height * zoomFactor));
+            picCanvas.Invalidate();
         }
     }
 }
